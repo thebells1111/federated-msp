@@ -10,8 +10,8 @@ services:
       - 3000:3000
 
     environment:
-      - ADMIN_USER=test
-      - ADMIN_PASS=password
+      - ADMIN_USER=
+      - ADMIN_PASS=
 
     volumes:
       - /var/docker/msp/credentials:/usr/src/app/msp/credentials
