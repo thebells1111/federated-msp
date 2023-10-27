@@ -14,6 +14,8 @@ if (DEV) {
 	writeFolder = path.resolve(process.cwd(), './public');
 }
 
+console.log(writeFolder);
+
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
 		const dir = `${writeFolder}/albums/${req.query.folderName}/${req.query.fileType}`;
@@ -33,15 +35,18 @@ async function createDir(req, res, next) {
 		req.query.fileType ? `/${req.query.fileType}` : ''
 	}`;
 	await fsPromises.mkdir(dir, { recursive: true });
+	console.log(dir);
 	next();
 }
 
 // Apply the middleware before invoking multer
 router.post('/', createDir, upload, async (req, res) => {
+	console.log(req.file);
 	if (req.file && req.file.filename) {
 		const dir = `${writeFolder}/albums/${req.query.folderName}${
 			req.query.fileType ? `/${req.query.fileType}` : ''
 		}`;
+		console.log(dir);
 		const filePath = `${dir}/${req.file.filename}`;
 		res.json({ success: true, path: filePath.split(writeFolder)[1] });
 	} else {

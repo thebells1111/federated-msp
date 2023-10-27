@@ -10,6 +10,7 @@
 	export let showModal;
 	export let fileReload;
 	let warning = '';
+	let showSpinner = false;
 
 	function getFileType(fileType) {
 		if (fileType.startsWith('image/') && type === 'image') return 'image';
@@ -54,22 +55,38 @@
 
 		const fullUrl = `${baseUrl}?${queryParams}`;
 
-		const response = await fetch(fullUrl, {
-			method: 'POST',
-			body: data
-		});
-		const result = await response.json();
-		if (type === 'audio') {
-			filePath = {
-				'@_url': result.path,
-				'@_type': file.type,
-				'@_length': file.size
-			};
-		} else {
-			filePath = result.path;
+		try {
+			let timer = setTimeout(() => (showSpinner = true), 500);
+			const response = await fetch(fullUrl, {
+				method: 'POST',
+				body: data
+			});
+
+			if (!response.ok) {
+				warning = 'Server error during upload.';
+				showSpinner = false;
+				clearTimeout(timer);
+				return;
+			}
+
+			let result = await response.json();
+			if (type === 'audio') {
+				filePath = {
+					'@_url': result.path,
+					'@_type': file.type,
+					'@_length': file.size
+				};
+			} else {
+				filePath = result.path;
+			}
+			fileReload = Date.now();
+			showModal = false;
+		} catch (e) {
+			warning = 'Server error during upload.';
+		} finally {
+			showSpinner = false;
+			clearTimeout(timer);
 		}
-		fileReload = Date.now();
-		showModal = false;
 	}
 
 	async function handleDrop(event) {
@@ -105,14 +122,21 @@
 	>
 		<Close size="24" />
 	</button>
-	<warning-modal>
-		<div on:drop={handleDrop} on:dragover={handleDragOver}>
-			<h3>{warning}</h3>
-			<p>Drop file here</p>
-			<p>-or-</p>
-			<input type="file" on:change={handleFileInput} multiple />
+
+	{#if showSpinner}
+		<div class="record-container">
+			<img src="/msp-record-300.png" alt="Record" class="record" />
 		</div>
-	</warning-modal>
+	{:else}
+		<warning-modal>
+			<div on:drop={handleDrop} on:dragover={handleDragOver}>
+				<h3>{warning}</h3>
+				<p>Drop file here</p>
+				<p>-or-</p>
+				<input type="file" on:change={handleFileInput} multiple />
+			</div>
+		</warning-modal>
+	{/if}
 </blurred-background>
 
 <style>
@@ -174,6 +198,33 @@
 		top: 32px;
 		right: 32px;
 		z-index: 33;
+	}
+
+	.record-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: fixed;
+		height: 100vh;
+		width: 100vw;
+		top: 0;
+	}
+
+	.record {
+		height: 300px;
+		width: 300px;
+		animation: spin 2s infinite linear;
+		border-radius: 50%;
+		box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.75);
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	@media screen and (max-width: 992px) {
