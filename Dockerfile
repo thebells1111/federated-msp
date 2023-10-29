@@ -24,5 +24,7 @@ COPY . .
 # Build the SvelteKit app
 RUN npm run build
 
+EXPOSE 3000
+
 # Use pm2 and server script as the entry point
 CMD ["pm2-runtime", "server/index.js"]
