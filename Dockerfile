@@ -1,5 +1,5 @@
 # Use the official Node.js 16 image from Docker Hub
-FROM node:16
+FROM node:16-alpine
 
 # Set the working directory
 WORKDIR /usr/src/app/msp
@@ -23,6 +23,8 @@ COPY . .
 
 # Build the SvelteKit app
 RUN npm run build
+
+EXPOSE 3000
 
 # Use pm2 and server script as the entry point
 CMD ["pm2-runtime", "server/index.js"]
